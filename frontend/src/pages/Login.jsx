@@ -9,61 +9,43 @@ const Login = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Mock Users Data
-  const buyers = [
-    { email: "buyer1@example.com", password: "123" },
-    { email: "buyer2@example.com", password: "123" },
-    { email: "buyer3@example.com", password: "123" },
-  ];
-
-  const sellers = [
-    { email: "seller1@example.com", password: "123" },
-    { email: "seller2@example.com", password: "123" },
-    { email: "seller3@example.com", password: "123" },
-  ];
-
-  const admins = [
-    { email: "admin@example.com", password: "123" }
-  ];
-
-  // Handle Login
-  const handleSubmit = (e) => {
+  // Handle Login with Backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    // Check Buyer
-    const buyer = buyers.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (buyer) {
-      setSuccess("Login successful! Redirecting to Buyer Dashboard...");
-      setTimeout(() => navigate("/buyer-dashboard"), 1500);
-      return;
-    }
+    try {
+      // Get all users from backend
+      const res = await fetch("http://localhost:5000/api/users");
+      const data = await res.json();
 
-    // Check Seller
-    const seller = sellers.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (seller) {
-      setSuccess("Login successful! Redirecting to Seller Dashboard...");
-      setTimeout(() => navigate("/seller-dashboard"), 1500);
-      return;
-    }
+      if (!res.ok) {
+        setError(data.message || "Something went wrong.");
+        return;
+      }
 
-    // Check Admin
-    const admin = admins.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (admin) {
-      setSuccess("Login successful! Redirecting to Admin Dashboard...");
-      setTimeout(() => navigate("/admin-dashboard"), 1500);
-      return;
-    }
+      // Find user by email/password
+      const user = data.find(
+        (u) => u.email === email && u.password === password
+      );
 
-    // If not matched
-    setError("Invalid email or password. Please try again.");
+      if (!user) {
+        setError("Invalid email or password. Please try again.");
+        return;
+      }
+
+      // Show success & redirect (you can add role field in DB later)
+      setSuccess("Login successful! Redirecting...");
+
+      setTimeout(() => {
+        // If you have role in DB, use it like user.role === "buyer"
+        // For now, redirect everyone to dashboard
+        navigate("/buyer-dashboard");
+      }, 1500);
+    } catch (err) {
+      setError("Server error. Please try again later.");
+    }
   };
 
   return (
