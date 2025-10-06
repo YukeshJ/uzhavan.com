@@ -17,31 +17,24 @@ const Login = () => {
 
     try {
       // Get all users from backend
-      const res = await fetch("http://localhost:5000/api/users");
+      const res = await fetch("http://localhost:5000/api/users/login");
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Something went wrong.");
+        setError(data.message || "Invalid credentials. Please try again.");
         return;
       }
 
-      // Find user by email/password
-      const user = data.find(
-        (u) => u.email === email && u.password === password
-      );
-
-      if (!user) {
-        setError("Invalid email or password. Please try again.");
-        return;
-      }
-
-      // Show success & redirect (you can add role field in DB later)
       setSuccess("Login successful! Redirecting...");
 
       setTimeout(() => {
-        // If you have role in DB, use it like user.role === "buyer"
-        // For now, redirect everyone to dashboard
-        navigate("/buyer-dashboard");
+        if (data.user.role === "seller") {
+          navigate("/seller-dashboard");
+        } else if (data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/buyer-dashboard");
+        }
       }, 1500);
     } catch (err) {
       setError("Server error. Please try again later.");
@@ -53,7 +46,6 @@ const Login = () => {
       <Navbar />
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 pt-20 pb-10">
         <div className="w-full max-w-md bg-white/90 backdrop-blur-lg shadow-2xl rounded-2xl p-8 border border-gray-200">
-          {/* Heading */}
           <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-2">
             Welcome Back
           </h1>
@@ -62,21 +54,18 @@ const Login = () => {
           </p>
           <hr className="mb-8 border-gray-300" />
 
-          {/* Error */}
           {error && (
             <div className="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-center font-medium">
               {error}
             </div>
           )}
 
-          {/* Success */}
           {success && (
             <div className="mb-4 rounded-lg bg-green-100 text-green-700 px-4 py-3 text-center font-medium animate-pulse">
               {success}
             </div>
           )}
 
-          {/* Login Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="flex flex-col">
               <label
@@ -114,8 +103,7 @@ const Login = () => {
               />
             </div>
 
-            {/* Register Link */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 text-center">
               New here?{" "}
               <Link
                 to="/register"
@@ -125,7 +113,6 @@ const Login = () => {
               </Link>
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-center">
               <button
                 type="submit"
