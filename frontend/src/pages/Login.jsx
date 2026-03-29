@@ -9,61 +9,36 @@ const Login = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Mock Users Data
-  const buyers = [
-    { email: "buyer1@example.com", password: "123" },
-    { email: "buyer2@example.com", password: "123" },
-    { email: "buyer3@example.com", password: "123" },
-  ];
-
-  const sellers = [
-    { email: "seller1@example.com", password: "123" },
-    { email: "seller2@example.com", password: "123" },
-    { email: "seller3@example.com", password: "123" },
-  ];
-
-  const admins = [
-    { email: "admin@example.com", password: "123" }
-  ];
-
-  // Handle Login
-  const handleSubmit = (e) => {
+  // Handle Login with Backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    // Check Buyer
-    const buyer = buyers.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (buyer) {
-      setSuccess("Login successful! Redirecting to Buyer Dashboard...");
-      setTimeout(() => navigate("/buyer-dashboard"), 1500);
-      return;
-    }
+    try {
+      // Get all users from backend
+      const res = await fetch("http://localhost:5000/api/users/login");
+      const data = await res.json();
 
-    // Check Seller
-    const seller = sellers.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (seller) {
-      setSuccess("Login successful! Redirecting to Seller Dashboard...");
-      setTimeout(() => navigate("/seller-dashboard"), 1500);
-      return;
-    }
+      if (!res.ok) {
+        setError(data.message || "Invalid credentials. Please try again.");
+        return;
+      }
 
-    // Check Admin
-    const admin = admins.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (admin) {
-      setSuccess("Login successful! Redirecting to Admin Dashboard...");
-      setTimeout(() => navigate("/admin-dashboard"), 1500);
-      return;
-    }
+      setSuccess("Login successful! Redirecting...");
 
-    // If not matched
-    setError("Invalid email or password. Please try again.");
+      setTimeout(() => {
+        if (data.user.role === "seller") {
+          navigate("/seller-dashboard");
+        } else if (data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/buyer-dashboard");
+        }
+      }, 1500);
+    } catch (err) {
+      setError("Server error. Please try again later.");
+    }
   };
 
   return (
@@ -71,7 +46,6 @@ const Login = () => {
       <Navbar />
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 pt-20 pb-10">
         <div className="w-full max-w-md bg-white/90 backdrop-blur-lg shadow-2xl rounded-2xl p-8 border border-gray-200">
-          {/* Heading */}
           <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-2">
             Welcome Back
           </h1>
@@ -80,21 +54,18 @@ const Login = () => {
           </p>
           <hr className="mb-8 border-gray-300" />
 
-          {/* Error */}
           {error && (
             <div className="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-center font-medium">
               {error}
             </div>
           )}
 
-          {/* Success */}
           {success && (
             <div className="mb-4 rounded-lg bg-green-100 text-green-700 px-4 py-3 text-center font-medium animate-pulse">
               {success}
             </div>
           )}
 
-          {/* Login Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="flex flex-col">
               <label
@@ -132,8 +103,7 @@ const Login = () => {
               />
             </div>
 
-            {/* Register Link */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 text-center">
               New here?{" "}
               <Link
                 to="/register"
@@ -143,7 +113,6 @@ const Login = () => {
               </Link>
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-center">
               <button
                 type="submit"
